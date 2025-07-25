@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './user.schema';
 import { Model } from 'mongoose';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class UsersRepo {
@@ -20,5 +21,43 @@ export class UsersRepo {
   ): Promise<User> {
     const newUser = new this.userModel({ email, password, role, name });
     return newUser.save();
+  }
+
+  public async findByEmailAndCompany(
+    email: string,
+    companyId: string,
+  ): Promise<User> {
+    return this.userModel.findOne({
+      email: email,
+      'details.companyId': companyId,
+    });
+  }
+
+  public async createUserWithCompanyId(
+    email: string,
+    password: string,
+    role: 'admin' | 'developer' | 'tester',
+    companyId: string,
+  ): Promise<User> {
+    const newUser = new this.userModel({
+      email,
+      password,
+      role,
+      'details.companyId': companyId,
+    });
+    return newUser.save();
+  }
+
+  public async updateUser(userId: string, companyId: string) {
+    return this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $set: { 'details.companyId': new Types.ObjectId(companyId) } },
+        {
+          new: true,
+          runValidators: true,
+        },
+      )
+      .lean();
   }
 }

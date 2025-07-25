@@ -5,7 +5,7 @@ import { Company } from './company.schema';
 import { UsersService } from 'src/users/user.service';
 import { UsersRepo } from 'src/users/user.repo';
 import { CompanyRepo } from './company.repo';
-
+import { Types } from 'mongoose'; // or from 'bson' if you're using bson
 @Injectable()
 export class CompanyService {
   constructor(
@@ -14,7 +14,12 @@ export class CompanyService {
     private userRepo: UsersRepo,
   ) {}
 
-  async createCompany(name: string, ownerId: string, industry: string) {
+  async createCompany(
+    name: string,
+    ownerId: string,
+    industry: string,
+    description: string,
+  ) {
     const user = await this.userRepo.findById(ownerId);
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -30,7 +35,14 @@ export class CompanyService {
       name,
       ownerId,
       industry,
+      description,
     );
+
+    const update = await this.userRepo.updateUser(
+      ownerId,
+      company._id.toString(),
+    );
+    console.log(update);
     return company;
   }
 }

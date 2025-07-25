@@ -8,7 +8,6 @@ export interface Project extends Document {
   startDate: Date; // Project start date
   endDate?: Date; // Project end date (optional)
   kanbanStages: string[]; // Custom Kanban stages for this project
-  modules: string[]; // Modules within the project
   employees: Types.ObjectId[]; // References to Employee collection (array of employee IDs)
   createdAt: Date; // When the project was created
   updatedAt: Date; // Last update time
@@ -21,8 +20,6 @@ export const ProjectSchema = new Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, default: null },
   kanbanStages: { type: [String], default: [] }, // Default stages for Kanban
-  bugCategories: { type: [String], default: [] },
-  modules: { type: [String], default: [] },
   employees: { type: [Schema.Types.ObjectId], ref: 'User', default: [] }, // References to Employee collection
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { UsersService } from './user.service';
+import { EmployeeService } from 'src/employee/employee.service';
 
 @Controller('users')
 export class UsersController {
@@ -33,5 +34,23 @@ export class UsersController {
   @Post('signin')
   async signIn(@Body() body: { email: string; password: string }) {
     return this.usersService.signIn(body.email, body.password);
+  }
+
+  @Post('create')
+  async createEmployees(
+    @Body()
+    body: {
+      employees: {
+        role: 'developer' | 'tester';
+        email: string;
+      }[];
+      companyId: string;
+    },
+  ) {
+    // Pass the list of employees to the service to create them
+    return await this.usersService.createEmployees(
+      body.employees,
+      body.companyId,
+    );
   }
 }

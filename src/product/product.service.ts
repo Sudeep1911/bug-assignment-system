@@ -18,7 +18,6 @@ export class ProjectService {
     startDate: Date,
     endDate: Date,
     kanbanStages: string[] = ['To Do', 'In Progress', 'Done'],
-    bugCategories: string[] = ['UI', 'Backend', 'Performance'],
     modules: string[] = ['Frontend', 'Backend', 'Database'],
     employees: Types.ObjectId[] = [], // Employee IDs to be assigned to the project
   ) {
@@ -29,8 +28,6 @@ export class ProjectService {
       startDate,
       endDate,
       kanbanStages,
-      bugCategories,
-      modules,
       employees,
       createdAt: new Date(),
       updatedAt: new Date(),

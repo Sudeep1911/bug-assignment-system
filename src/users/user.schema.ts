@@ -16,24 +16,27 @@ export interface User extends Document {
 export const UserSchema = new Schema({
   email: { type: String, unique: true, required: true },
   password: { type: String, required: true },
-  name: { type: String, required: true },
+  name: { type: String, required: false },
   role: {
     type: String,
     enum: ['developer', 'tester', 'admin'],
     required: true,
   },
   details: {
-    type: new Schema({
-      companyId: {
-        type: Schema.Types.ObjectId,
-        required: false,
-        ref: 'Company',
+    type: new Schema(
+      {
+        companyId: {
+          type: Schema.Types.ObjectId,
+          required: false,
+          ref: 'Company',
+        },
+        designation: { type: String, required: false },
+        proficiency: { type: [String], required: false },
+        module: { type: String, required: false },
       },
-
-      designation: { type: String, required: false },
-      proficiency: { type: [String], required: false },
-      module: { type: String, required: false },
-    }),
+      { _id: false },
+    ),
+    default: undefined,
     required: false,
   },
 });

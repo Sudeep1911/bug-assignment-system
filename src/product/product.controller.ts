@@ -18,7 +18,6 @@ export class ProjectController {
       startDate: Date;
       endDate: Date;
       kanbanStages: string[];
-      bugCategories: string[];
       modules: string[];
       employees: string[]; // Array of employee IDs
     },
@@ -30,7 +29,6 @@ export class ProjectController {
       startDate,
       endDate,
       kanbanStages,
-      bugCategories,
       modules,
       employees,
     } = body;
@@ -44,7 +42,6 @@ export class ProjectController {
       startDate,
       endDate,
       kanbanStages,
-      bugCategories,
       modules,
       employeeIds,
     );
