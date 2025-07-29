@@ -1,8 +1,7 @@
-import { Schema, model, Document } from 'mongoose';
-import { Types } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
 interface ModulePrediction {
-  label: string; // e.g., UI, Authentication, Database, etc.
+  label: Types.ObjectId; // Reference to the Modules schema's _id
   confidence: number;
 }
 
@@ -23,7 +22,7 @@ export interface Task extends Document {
   modulePrediction?: ModulePrediction;
   priorityPrediction?: PriorityPrediction;
   assignedTo?: Types.ObjectId;
-  status?: string; // Dynamic Kanban column name
+  status?: Types.ObjectId; // Reference to the KanbanStage schema's _id
   tags?: string[];
   dueDate?: Date;
   attachments?: string[];
@@ -41,11 +40,10 @@ const TaskSchema = new Schema<Task>({
   description: { type: String, required: true },
   raisedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   monitoredBy: { type: Schema.Types.ObjectId, ref: 'User' },
-
   timestamp: { type: Date, default: Date.now },
 
   modulePrediction: {
-    label: { type: String },
+    label: { type: Schema.Types.ObjectId, ref: 'Modules' }, // Reference to the Modules collection
     confidence: {
       type: Number,
       min: 0,
@@ -66,10 +64,11 @@ const TaskSchema = new Schema<Task>({
   },
 
   assignedTo: { type: Schema.Types.ObjectId, ref: 'Employee' },
-  status: { type: String, default: 'Backlog' },
+  status: { type: Schema.Types.ObjectId, ref: 'KanbanStage' }, // Reference to the KanbanStage collection
   tags: [{ type: String }],
   dueDate: { type: Date },
   attachments: [{ type: String }],
 });
+
 
 export const TaskModel = model<Task>('Task', TaskSchema);

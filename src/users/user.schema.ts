@@ -8,8 +8,10 @@ export interface User extends Document {
   details: {
     companyId?: Types.ObjectId;
     designation?: string;
-    proficiency?: string[];
-    module?: string;
+    modules?: {
+      module: Types.ObjectId;          // References Module collection
+      proficiency: number;
+    }[];
   };
 }
 
@@ -31,8 +33,12 @@ export const UserSchema = new Schema({
           ref: 'Company',
         },
         designation: { type: String, required: false },
-        proficiency: { type: [String], required: false },
-        module: { type: String, required: false },
+        modules: [
+          {
+            module: { type: Schema.Types.ObjectId, ref: 'Modules', required: true },
+            proficiency: { type: Number, required: true },
+          },
+        ],
       },
       { _id: false },
     ),
