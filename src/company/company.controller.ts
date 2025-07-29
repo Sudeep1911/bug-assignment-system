@@ -21,4 +21,9 @@ export class CompanyController {
       body.description,
     );
   }
+
+  @Get(':id/users')
+  async getUsersByCompanyId(@Param('id') companyId: string) {
+    return this.companyService.getUsersByCompanyId(companyId);
+  }
 }

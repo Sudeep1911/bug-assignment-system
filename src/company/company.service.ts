@@ -45,4 +45,10 @@ export class CompanyService {
     console.log(update);
     return company;
   }
+
+  async getUsersByCompanyId(companyId: string) {
+
+    const users = await this.userRepo.findUsersByCompanyId(companyId);
+    return users;
+  }
 }
