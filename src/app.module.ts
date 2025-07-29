@@ -7,6 +7,8 @@ import { CompanyModule } from './company/company.module';
 import { EmployeeModule } from './employee/employee.module';
 import { ProductModule } from './product/product.module';
 import { GPTModule } from './gpt/gpt.module';
+import { KanbanStagesModule } from './kanbanStages/kanbanStages.module';
+import { ModulesModule } from './modules/modules.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { GPTModule } from './gpt/gpt.module';
     CompanyModule,
     EmployeeModule,
     ProductModule,
+    KanbanStagesModule,
+    ModulesModule,
     GPTModule,
   ],
   controllers: [AppController],

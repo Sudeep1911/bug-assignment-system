@@ -60,4 +60,8 @@ export class UsersRepo {
       )
       .lean();
   }
+
+  public async findUsersByCompanyId(companyId: string): Promise<User[]> {
+    return this.userModel.find({ 'details.companyId': new Types.ObjectId(companyId) });
+  }
 }
