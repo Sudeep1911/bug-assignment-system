@@ -51,4 +51,20 @@ export class CompanyService {
     const users = await this.userRepo.findUsersByCompanyId(companyId);
     return users;
   }
+
+  async getCompanyById(companyId: string) {
+    const company = await this.companyRepo.findCompanyById(companyId);
+    if (!company) {
+      throw new HttpException('Company not found', HttpStatus.NOT_FOUND);
+    }
+    return company;
+  }
+  async updateCompany(companyId: string, body: any) {
+    const company = await this.companyModel.findOneAndUpdate({ _id: companyId }, body, { new: true }).exec();
+    if (!company) {
+      throw new HttpException('Company not found', HttpStatus.NOT_FOUND);
+    }
+    return company;
+  }
+
 }
