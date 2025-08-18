@@ -10,10 +10,13 @@ export interface Company extends Document {
 }
 
 export const CompanySchema = new Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: false,unique: false },
   ownerId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   industry: { type: String, required: false },
+  description: { type: String, required: false },
   string: { type: String, required: false },
   createdAt: { type: Date, required: true },
   updatedAt: { type: Date, required: true },
 });
+
+CompanySchema.index({ name: 1, ownerId: 1 }, { unique: true });

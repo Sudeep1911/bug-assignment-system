@@ -1,26 +1,16 @@
 import { Schema, model, Document, Types } from 'mongoose';
-
-interface ModulePrediction {
-  label: Types.ObjectId; // Reference to the Modules schema's _id
-  confidence: number;
-}
-
-interface PriorityPrediction {
-  label: 'High' | 'Medium' | 'Low';
-  confidence: number;
-}
-
 export interface Task extends Document {
-  taskId: string;
+  taskId?: string;
   projectId: string;
+  companyId?: Types.ObjectId; // Optional field for company association
   type: 'Bug' | 'Feature' | 'Task';
   title: string;
   description: string;
   raisedBy: Types.ObjectId;
   monitoredBy?: Types.ObjectId;
   timestamp: Date;
-  modulePrediction?: ModulePrediction;
-  priorityPrediction?: PriorityPrediction;
+  modules: Types.ObjectId; // Reference to the Modules schema's _id
+  priority:"High" | "Medium" | "Low";
   assignedTo?: Types.ObjectId;
   status?: Types.ObjectId; // Reference to the KanbanStage schema's _id
   tags?: string[];
@@ -28,9 +18,14 @@ export interface Task extends Document {
   attachments?: string[];
 }
 
-const TaskSchema = new Schema<Task>({
-  taskId: { type: String, required: true, unique: true },
+export const TaskSchema = new Schema<Task>({
+  taskId: {
+    type: String,
+    unique: true,
+    default: () => new Types.ObjectId().toString()
+  },
   projectId: { type: String, required: true },
+  companyId: { type: Schema.Types.ObjectId, ref: 'Company' }, // Optional reference to Company schema
   type: {
     type: String,
     enum: ['Bug', 'Feature', 'Task'],
@@ -42,25 +37,11 @@ const TaskSchema = new Schema<Task>({
   monitoredBy: { type: Schema.Types.ObjectId, ref: 'User' },
   timestamp: { type: Date, default: Date.now },
 
-  modulePrediction: {
-    label: { type: Schema.Types.ObjectId, ref: 'Modules' }, // Reference to the Modules collection
-    confidence: {
-      type: Number,
-      min: 0,
-      max: 1,
-    },
-  },
+  modules: { type: Schema.Types.ObjectId, ref: 'Modules' },
 
-  priorityPrediction: {
-    label: {
+  priority: {
       type: String,
       enum: ['High', 'Medium', 'Low'],
-    },
-    confidence: {
-      type: Number,
-      min: 0,
-      max: 1,
-    },
   },
 
   assignedTo: { type: Schema.Types.ObjectId, ref: 'Employee' },
