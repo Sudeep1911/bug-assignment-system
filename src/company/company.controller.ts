@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put } from '@nestjs/common';
 import { CompanyService } from './company.service';
 
 @Controller('company')
@@ -25,5 +25,19 @@ export class CompanyController {
   @Get(':id/users')
   async getUsersByCompanyId(@Param('id') companyId: string) {
     return this.companyService.getUsersByCompanyId(companyId);
+  }
+
+  @Get(":id")
+  async getCompanyById(@Param('id') companyId: string) {
+    return this.companyService.getCompanyById(companyId);
+  }
+
+  @Put(':id')
+  async updateCompany(
+    @Param('id') companyId: string,
+    @Body()
+    body: any,
+  ) {
+    return this.companyService.updateCompany(companyId, body);
   }
 }

@@ -9,13 +9,15 @@ export class GPTController {
   async getCategory(
     @Body()
     body: {
+      projectId: string;
       desc: string;
-      categories: string[];
+      type:"dev"|"test"
     },
   ) {
-    const result = await this.gptService.getCategoryandPriority(
+    const result = await this.gptService.getCategoryAndPriority(
+      body.projectId,
       body.desc,
-      body.categories,
+      body.type
     );
     return result;
   }

@@ -9,6 +9,7 @@ import { ProductModule } from './product/product.module';
 import { GPTModule } from './gpt/gpt.module';
 import { KanbanStagesModule } from './kanbanStages/kanbanStages.module';
 import { ModulesModule } from './modules/modules.module';
+import { TaskModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ModulesModule } from './modules/modules.module';
     KanbanStagesModule,
     ModulesModule,
     GPTModule,
+    TaskModule,
   ],
   controllers: [AppController],
   providers: [AppService],
