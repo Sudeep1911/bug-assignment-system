@@ -9,6 +9,7 @@ import { CreateProjectDto } from './product.dto';
 import { KanbanStage } from 'src/kanbanStages/kanbanStages.schema';
 import { Modules } from 'src/modules/modules.schema';
 import { User } from 'src/users/user.schema';
+import { TaskService } from 'src/tasks/tasks.service';
 
 @Injectable()
 export class ProjectService {
@@ -17,11 +18,13 @@ constructor(
   @InjectModel('KanbanStages') private kanbanStageModel: Model<KanbanStage>,
   @InjectModel('Modules') private moduleModel: Model<Modules>,
 @InjectModel('User') private userModel: Model<User>,
+private taskService: TaskService, // Assuming you have a TaskService to handle tasks
 ) {}
 
   // Create a new project
 async createProject(body: CreateProjectDto) {
   const {
+    adminId,
     companyId,
     name,
     description,
@@ -40,7 +43,10 @@ async createProject(body: CreateProjectDto) {
     description,
     startDate: new Date(startDate),
     endDate: new Date(endDate),
-    employees: employees.map((e) => new Types.ObjectId(e.employeeId)), // only IDs
+    employees: [
+      new Types.ObjectId(adminId),
+      ...employees.map((e) => new Types.ObjectId(e.employeeId))
+    ], // include adminId
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -123,5 +129,67 @@ async createProject(body: CreateProjectDto) {
     await project.save();
 
     return project;
+  }
+
+  // Get projects by user ID, including modules for each project
+  async getProjectsByUserId(userId: Types.ObjectId) {
+    const projects = await this.projectModel.find({ employees: userId });
+    const projectsWithModules = await Promise.all(
+      projects.map(async (project) => {
+        const modules = await this.moduleModel.find({ projectId: project._id });
+        const kanbanStages = await this.kanbanStageModel.find({ projectId: project._id });
+        return {
+          ...project.toObject(),
+          modules,
+          kanbanStages,
+        };
+      })
+    );
+    return projectsWithModules;
+  }
+
+  async updateProject(
+    projectId: Types.ObjectId,
+    body: CreateProjectDto,
+  ) {
+    const project=await this.projectModel.findByIdAndUpdate(
+      { _id: projectId },
+      body,
+      { new: true }
+    ).exec();
+    return project;
+  }
+
+  async getProjectUsers(projectId: Types.ObjectId) {
+    const project = await this.projectModel
+        .findById(projectId)
+        .populate('employees');
+
+      if (!project) {
+        throw new Error('Project not found');
+      }
+
+      // Get all tasks for the project
+      const tasks = await this.taskService.getAllTasks(projectId.toString());
+
+      // Map employees with their respective tasks
+      const employeesWithTasks = project.employees.map((employee: any) => {
+        const employeeTasks = tasks.filter(
+          (task: any) => task.assignedTo?.toString() === employee._id.toString()
+        );
+
+        return {
+          ...employee.toObject?.() ?? employee,
+          tasks: employeeTasks,
+        };
+      });
+
+      return employeesWithTasks;
+
+  }
+
+  async getProjectModules(projectId: Types.ObjectId) {
+    const modules = await this.moduleModel.find({ projectId });
+    return modules;
   }
 }

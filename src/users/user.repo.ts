@@ -37,12 +37,14 @@ export class UsersRepo {
     email: string,
     password: string,
     role: 'admin' | 'developer' | 'tester',
+    name: string,
     companyId: string,
   ): Promise<User> {
     const newUser = new this.userModel({
       email,
       password,
       role,
+      name,
       'details.companyId': companyId,
     });
     return newUser.save();

@@ -1,5 +1,6 @@
 // create-project.dto.ts
 export interface CreateProjectDto {
+  adminId: string;
   companyId: string;
   name: string;
   description: string;

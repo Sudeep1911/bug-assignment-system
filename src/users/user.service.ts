@@ -56,13 +56,14 @@ export class UsersService {
     employeesData: {
       role: 'developer' | 'tester';
       email: string;
+      name: string;
     }[],
     companyId: string,
   ) {
     const company = await this.companyRepo.findCompanyById(companyId);
     await Promise.all(
       employeesData.map(async (data) => {
-        const { role, email } = data;
+        const { role, email,name } = data;
 
         const existingEmployee = await this.userRepo.findByEmailAndCompany(
           email,
@@ -82,6 +83,7 @@ export class UsersService {
             email,
             password,
             role,
+            name,
             companyId,
           );
           await this.sendEmail(email, company.name, password);

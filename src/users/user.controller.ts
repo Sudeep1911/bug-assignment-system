@@ -43,6 +43,7 @@ export class UsersController {
       employees: {
         role: 'developer' | 'tester';
         email: string;
+        name:string;
       }[];
       companyId: string;
     },
