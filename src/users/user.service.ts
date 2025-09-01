@@ -46,7 +46,7 @@ export class UsersService {
 
   async signIn(email: string, password: string): Promise<User> {
     const user = await this.userRepo.findByEmail(email);
-    if (user.password !== password) {
+    if (user?.password !== password) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
     return user;
