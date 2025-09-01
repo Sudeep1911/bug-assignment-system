@@ -42,7 +42,6 @@ export class CompanyService {
       ownerId,
       company._id.toString(),
     );
-    console.log(update);
     return company;
   }
 
