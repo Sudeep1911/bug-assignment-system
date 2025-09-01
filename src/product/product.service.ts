@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
-import { Employee } from 'src/employee/employee.schema';
-import { EmployeeRepo } from 'src/employee/employee.repo';
 import { Project } from './product.schema';
 import { CreateProjectDto } from './product.dto';
 import { KanbanStage } from 'src/kanbanStages/kanbanStages.schema';
