@@ -8,6 +8,9 @@ import { GPTModule } from 'src/gpt/gpt.module';
 import { ChatMessageSchema } from './chat.shema';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
+import { ChatGateway } from './chat.gateway';
+import { KanbanStagesModule } from 'src/kanbanStages/kanbanStages.module';
+import { GcpService } from './gcp.service';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Task', schema: TaskSchema }]),
@@ -18,9 +21,10 @@ import { ChatService } from './chat.service';
       { name: 'KanbanStages', schema: KanbanStageSchema },
     ]),
     forwardRef(() => GPTModule),
+    KanbanStagesModule,
   ],
   controllers: [TaskController, ChatController],
-  providers: [TaskService, ChatService],
+  providers: [TaskService, ChatService, ChatGateway, GcpService],
   exports: [TaskService, ChatService],
 })
 export class TaskModule {}
