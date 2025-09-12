@@ -6,6 +6,7 @@ import { Model } from 'mongoose';
 import { Task } from './tasks.schema';
 import { KanbanStage } from 'src/kanbanStages/kanbanStages.schema';
 import { GPTService } from 'src/gpt/gpt.sevice';
+import { GcpService } from './gcp.service';
 
 // Mock data
 const mockTask = {
@@ -28,6 +29,16 @@ const mockGptResponse = {
   assignedDeveloper: { employeeId: 'dev-101' },
 };
 
+const mockGcpService = {
+  // Add necessary mock methods for GcpService here
+  uploadFile: jest.fn().mockResolvedValue({
+    /* mock file upload response */
+  }),
+  deleteFile: jest.fn().mockResolvedValue({
+    /* mock file delete response */
+  }),
+  getSignedUrl: jest.fn().mockResolvedValue('mock-signed-url'),
+};
 // Mock dependencies
 const mockTaskModel = {
   findById: jest.fn().mockImplementation(() => ({
@@ -76,14 +87,20 @@ describe('TaskService', () => {
           provide: GPTService,
           useValue: mockGptService,
         },
+        {
+          provide: GcpService,
+          useValue: mockGcpService,
+        },
       ],
     }).compile();
 
     service = module.get<TaskService>(TaskService);
     taskModel = module.get<Model<Task>>(getModelToken('Task'));
-    kanbanStageModel = module.get<Model<KanbanStage>>(getModelToken('KanbanStages'));
+    kanbanStageModel = module.get<Model<KanbanStage>>(
+      getModelToken('KanbanStages'),
+    );
     gptService = module.get<GPTService>(GPTService);
-    
+
     // Reset mocks for each test
     jest.clearAllMocks();
   });
@@ -99,9 +116,9 @@ describe('TaskService', () => {
         ...mockTask,
         status: mockKanbanStages[1]._id,
         priority: mockGptResponse.priority,
-        assignedTo: mockGptResponse.assignedDeveloper.employeeId
+        assignedTo: mockGptResponse.assignedDeveloper.employeeId,
       };
-      
+
       // Mock findById to return the task before the update
       jest.spyOn(taskModel, 'findById').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(mockTask),
@@ -118,12 +135,13 @@ describe('TaskService', () => {
       } as any);
 
       // Mock GPT service
-      jest.spyOn(gptService, 'getCategoryAndPriority').mockResolvedValue(mockGptResponse as any);
-
+      jest
+        .spyOn(gptService, 'getCategoryAndPriority')
+        .mockResolvedValue(mockGptResponse as any);
 
       const result = await service.createTask({
         ...updatedBody,
-        taskId: mockTask.taskId
+        taskId: mockTask.taskId,
       } as any);
 
       // Expect the findOneAndUpdate call to have the correct updated values
@@ -132,9 +150,9 @@ describe('TaskService', () => {
         expect.objectContaining({
           priority: mockGptResponse.priority,
           assignedTo: mockGptResponse.assignedDeveloper.employeeId,
-          status: updatedBody.status
+          status: updatedBody.status,
         }),
-        { new: true }
+        { new: true },
       );
       expect(result).toEqual(expectedUpdatedTask);
     });
@@ -143,36 +161,54 @@ describe('TaskService', () => {
       const newTaskBody = {
         description: 'New task',
         projectId: 'proj-123',
+        attachments: [], // Ensure attachments are part of the input body
       };
-      
+
       // Mock the Mongoose model's constructor and save method
-      const mockSave = jest.fn().mockResolvedValue({ _id: 'new-id', ...newTaskBody });
+      const mockSave = jest
+        .fn()
+        .mockResolvedValue({ _id: 'new-id', ...newTaskBody });
       const mockTaskModelConstructor = jest.fn(() => ({ save: mockSave }));
-      
-      // Correctly override the model mock for this specific test
-      Object.defineProperty(service, 'taskModel', { value: mockTaskModelConstructor });
+
+      // Override the model mock for this test
+      Object.defineProperty(service, 'taskModel', {
+        value: mockTaskModelConstructor,
+      });
 
       const result = await service.createTask(newTaskBody as any);
-      
-      expect(mockTaskModelConstructor).toHaveBeenCalledWith(newTaskBody);
+
+      // Check if the attachments field is included in the result
+      expect(mockTaskModelConstructor).toHaveBeenCalledWith({
+        ...newTaskBody,
+        attachments: expect.arrayContaining([]), // Ensure attachments are included
+      });
       expect(mockSave).toHaveBeenCalled();
-      expect(result).toEqual({ _id: 'new-id', ...newTaskBody });
+      expect(result).toEqual({
+        _id: 'new-id',
+        ...newTaskBody,
+        attachments: [],
+      });
     });
-    
+
     it('should call GPTService and update task if status is "Testing" stage', async () => {
-      const taskInTestingStage = { ...mockTask, status: mockKanbanStages[1]._id };
-      
+      const taskInTestingStage = {
+        ...mockTask,
+        status: mockKanbanStages[1]._id,
+      };
+
       // Mock findById to return the old task (before status change)
       jest.spyOn(taskModel, 'findById').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(mockTask),
       } as any);
-      
+
       jest.spyOn(kanbanStageModel, 'find').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(mockKanbanStages),
       } as any);
-      
-      jest.spyOn(gptService, 'getCategoryAndPriority').mockResolvedValue(mockGptResponse as any);
-      
+
+      jest
+        .spyOn(gptService, 'getCategoryAndPriority')
+        .mockResolvedValue(mockGptResponse as any);
+
       jest.spyOn(taskModel, 'findOneAndUpdate').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue({
           ...taskInTestingStage,
@@ -180,7 +216,7 @@ describe('TaskService', () => {
           assignedTo: mockGptResponse.assignedDeveloper.employeeId,
         }),
       } as any);
-      
+
       const result = await service.createTask({
         ...taskInTestingStage,
         taskId: taskInTestingStage._id,
@@ -188,11 +224,13 @@ describe('TaskService', () => {
       } as any);
 
       expect(taskModel.findById).toHaveBeenCalledWith(taskInTestingStage._id);
-      expect(kanbanStageModel.find).toHaveBeenCalledWith({ projectId: mockTask.projectId });
+      expect(kanbanStageModel.find).toHaveBeenCalledWith({
+        projectId: mockTask.projectId,
+      });
       expect(gptService.getCategoryAndPriority).toHaveBeenCalledWith(
         mockTask.projectId,
         mockTask.description,
-        "test"
+        'test',
       );
       expect(taskModel.findOneAndUpdate).toHaveBeenCalledWith(
         { _id: taskInTestingStage._id },
@@ -200,28 +238,35 @@ describe('TaskService', () => {
           priority: mockGptResponse.priority,
           assignedTo: mockGptResponse.assignedDeveloper.employeeId,
         }),
-        { new: true }
+        { new: true },
       );
       expect(result.priority).toBe(mockGptResponse.priority);
-      expect(result.assignedTo).toBe(mockGptResponse.assignedDeveloper.employeeId);
+      expect(result.assignedTo).toBe(
+        mockGptResponse.assignedDeveloper.employeeId,
+      );
     });
-    
+
     it('should not call GPTService if status is not "Testing" stage', async () => {
-      const taskInAnotherStage = { ...mockTask, status: mockKanbanStages[0]._id };
+      const taskInAnotherStage = {
+        ...mockTask,
+        status: mockKanbanStages[0]._id,
+      };
       jest.spyOn(taskModel, 'findById').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(mockTask),
       } as any);
-      
-      const updateSpy = jest.spyOn(taskModel, 'findOneAndUpdate').mockReturnValueOnce({
-        exec: jest.fn().mockResolvedValue(taskInAnotherStage),
-      } as any);
-      
+
+      const updateSpy = jest
+        .spyOn(taskModel, 'findOneAndUpdate')
+        .mockReturnValueOnce({
+          exec: jest.fn().mockResolvedValue(taskInAnotherStage),
+        } as any);
+
       const result = await service.createTask({
         ...taskInAnotherStage,
         taskId: taskInAnotherStage._id,
-        projectId: taskInAnotherStage.projectId
+        projectId: taskInAnotherStage.projectId,
       } as any);
-      
+
       expect(gptService.getCategoryAndPriority).not.toHaveBeenCalled();
       expect(result).toEqual(taskInAnotherStage);
     });
@@ -232,7 +277,7 @@ describe('TaskService', () => {
       jest.spyOn(taskModel, 'findOne').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(mockTask),
       } as any);
-      
+
       const result = await service.getTaskById('TASK-001');
       expect(taskModel.findOne).toHaveBeenCalledWith({ taskId: 'TASK-001' });
       expect(result).toEqual(mockTask);
@@ -242,19 +287,19 @@ describe('TaskService', () => {
       jest.spyOn(taskModel, 'findOne').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue(null),
       } as any);
-      
+
       await expect(service.getTaskById('TASK-002')).rejects.toThrow(
         new HttpException('Task not found', HttpStatus.NOT_FOUND),
       );
     });
   });
-  
+
   describe('getAllTasks', () => {
     it('should return all tasks for a given projectId', async () => {
       jest.spyOn(taskModel, 'find').mockReturnValueOnce({
         exec: jest.fn().mockResolvedValue([mockTask, mockTask]),
       } as any);
-      
+
       const result = await service.getAllTasks('project-456');
       expect(taskModel.find).toHaveBeenCalledWith({ projectId: 'project-456' });
       expect(result).toEqual([mockTask, mockTask]);

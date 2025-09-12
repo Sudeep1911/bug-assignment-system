@@ -25,6 +25,6 @@ import { GcpService } from './gcp.service';
   ],
   controllers: [TaskController, ChatController],
   providers: [TaskService, ChatService, ChatGateway, GcpService],
-  exports: [TaskService, ChatService],
+  exports: [TaskService, ChatService, ChatGateway, GcpService],
 })
 export class TaskModule {}
