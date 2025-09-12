@@ -21,24 +21,28 @@ export class TaskService {
     attachments?: Express.Multer.File[],
   ): Promise<Task> {
     const { taskId } = body;
+    let newAttachments: any[] = [];
 
-    // If a taskId is provided, attempt to update the existing task
+    // If attachments are provided, upload them first
+    if (attachments && attachments.length > 0) {
+      for (const file of attachments) {
+        const fileData = await this.gcpService.uploadFile(file);
+        newAttachments.push(fileData);
+      }
+    }
+
+    // If taskId is provided, attempt to update the existing task
     if (taskId) {
       const existingTask = await this.taskModel.findById(taskId).exec();
       if (!existingTask) {
         throw new HttpException('Task not found', HttpStatus.NOT_FOUND);
       }
 
-      const newAttachments = [];
-      if (attachments && attachments.length > 0) {
-        for (const file of attachments) {
-          const fileData = await this.gcpService.uploadFile(file);
-          newAttachments.push(fileData);
-        }
-      }
-
       // Append new attachments to the existing ones
-      body.attachments = [...existingTask.attachments, ...newAttachments];
+      body.attachments = [
+        ...(existingTask.attachments || []),
+        ...newAttachments,
+      ];
 
       // Check if the status has changed and the new status is 'Testing'
       if (
@@ -72,23 +76,13 @@ export class TaskService {
         .findOneAndUpdate({ _id: taskId }, body, { new: true })
         .exec();
 
-      if (updatedTask) {
-        return updatedTask;
-      }
+      return updatedTask; // Return the updated task
     }
-
-    // Logic for creating a new task
-    const newAttachments = [];
-    if (attachments && attachments.length > 0) {
-      for (const file of attachments) {
-        const fileData = await this.gcpService.uploadFile(file);
-        newAttachments.push(fileData);
-      }
-    }
-    body.attachments = newAttachments;
 
     // If taskId was not provided, or it was provided but no existing task was found,
-    // create a new task.
+    // create a new task
+    body.attachments = newAttachments; // Ensure attachments are included
+
     const newTask = new this.taskModel(body);
     return await newTask.save();
   }
