@@ -46,9 +46,16 @@ export class CompanyService {
   }
 
   async getUsersByCompanyId(companyId: string) {
-
     const users = await this.userRepo.findUsersByCompanyId(companyId);
-    return users;
+    if (users) {
+      const newUsers = users.map(({ password, ...rest }) => rest);
+      return newUsers;
+    } else {
+      throw new HttpException(
+        'Users or Company not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 
   async getCompanyById(companyId: string) {
@@ -59,11 +66,12 @@ export class CompanyService {
     return company;
   }
   async updateCompany(companyId: string, body: any) {
-    const company = await this.companyModel.findOneAndUpdate({ _id: companyId }, body, { new: true }).exec();
+    const company = await this.companyModel
+      .findOneAndUpdate({ _id: companyId }, body, { new: true })
+      .exec();
     if (!company) {
       throw new HttpException('Company not found', HttpStatus.NOT_FOUND);
     }
     return company;
   }
-
 }
