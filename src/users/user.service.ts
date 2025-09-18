@@ -61,9 +61,13 @@ export class UsersService {
     companyId: string,
   ) {
     const company = await this.companyRepo.findCompanyById(companyId);
+    if (!company) {
+      throw new HttpException('Company not found', HttpStatus.NOT_FOUND);
+    }
+
     await Promise.all(
       employeesData.map(async (data) => {
-        const { role, email,name } = data;
+        const { role, email, name } = data;
 
         const existingEmployee = await this.userRepo.findByEmailAndCompany(
           email,

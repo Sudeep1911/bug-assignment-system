@@ -17,6 +17,7 @@ import {
   ApiBadRequestResponseCreate,
   CreateCompanyDto,
   CreateCompanyResponseDto,
+  CreateUserResponseDto,
 } from './company.dto';
 
 // Add @ApiProperty() decorators to each property in the DTO
@@ -41,8 +42,10 @@ export class CompanyController {
   }
 
   @Get(':id/users')
-  @ApiOperation({ summary: 'Get users by company ID' })
+  @ApiOperation({ summary: 'Get Employee by company ID' })
   @ApiParam({ name: 'id', description: 'Company ID' })
+  @ApiOkResponse({ type: [CreateUserResponseDto] })
+  @ApiNotFoundResponse({ type: ApiBadRequestResponseCreate })
   async getUsersByCompanyId(@Param('id') companyId: string) {
     return this.companyService.getUsersByCompanyId(companyId);
   }

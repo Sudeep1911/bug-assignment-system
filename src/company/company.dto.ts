@@ -83,3 +83,55 @@ export class CreateCompanyResponseDto {
   @ApiProperty({ description: 'The document version key.', example: 0 })
   __v: number;
 }
+
+export class CreateUserResponseDto {
+  @ApiProperty({
+    description: 'Unique identifier of the user.',
+    example: '689c2c79ec8d42c147e33a7a',
+  })
+  _id: string;
+
+  @ApiProperty({
+    description: 'User email address.',
+    example: 'jane@company.com',
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'Full name of the user.',
+    example: 'Jane Smith',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Role assigned to the user.',
+    example: 'developer',
+  })
+  role: string;
+
+  @ApiProperty({
+    description: 'Version key for the document.',
+    example: 0,
+  })
+  __v: number;
+
+  @ApiProperty({
+    description: 'Additional user details including company and module info.',
+    example: {
+      companyId: '68c27370bc32b5ae8ea811ad',
+      modules: [
+        {
+          module: '68a2ca5abb6726fc0e94966d',
+          proficiency: 1,
+        },
+      ],
+    },
+  })
+  details: {
+    companyId: string;
+    modules: {
+      module: string;
+      proficiency: number;
+    }[];
+  };
+}

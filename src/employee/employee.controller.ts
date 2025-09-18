@@ -1,5 +1,19 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiBody,
+  ApiProperty,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiAcceptedResponse,
+  ApiResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
+import { Employee } from './employee.schema';
 
 @Controller('employee')
 export class EmployeeController {
@@ -26,6 +40,10 @@ export class EmployeeController {
   // }
 
   @Get('company/:companyId/employee/:employeeId')
+  @ApiOperation({ summary: 'Get employee by company and employee ID' })
+  @ApiParam({ name: 'companyId', type: String, description: 'Company ID' })
+  @ApiParam({ name: 'employeeId', type: String, description: 'Employee ID' })
+  @ApiResponse({ status: 404, description: 'Employee not found' })
   async getEmployee(
     @Param('companyId') companyId: string,
     @Param('employeeId') employeeId: string,
