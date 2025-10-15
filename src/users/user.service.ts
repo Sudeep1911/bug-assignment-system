@@ -4,6 +4,7 @@ import { UsersRepo } from './user.repo';
 import { generateRandomPassword } from 'src/utils/password.utils';
 import { CompanyRepo } from 'src/company/company.repo';
 import axios from 'axios';
+import e from 'express';
 
 @Injectable()
 export class UsersService {
@@ -60,28 +61,54 @@ export class UsersService {
     }[],
     companyId: string,
   ) {
-    const company = await this.companyRepo.findCompanyById(companyId);
+    const [existingUsers, company] = await Promise.all([
+      this.userRepo.findUsersByCompanyId(companyId),
+      this.companyRepo.findCompanyById(companyId),
+    ]);
+
     if (!company) {
       throw new HttpException('Company not found', HttpStatus.NOT_FOUND);
     }
 
+    // Convert to maps for faster lookup
+    const existingUsersMap = new Map(
+      existingUsers.map((u) => [u.email.toLowerCase(), u]),
+    );
+
+    // Track which users should remain
+    const incomingEmails = new Set(
+      employeesData.map((e) => e.email.toLowerCase()),
+    );
+
+    // Handle Create & Update
     await Promise.all(
       employeesData.map(async (data) => {
         const { role, email, name } = data;
+        const emailKey = email.toLowerCase();
 
-        const existingEmployee = await this.userRepo.findByEmailAndCompany(
-          email,
-          companyId,
-        );
+        const existingEmployee = existingUsersMap.get(emailKey);
 
         if (existingEmployee) {
-          return true;
+          // Update if role or name changed
+          if (
+            existingEmployee.role !== role ||
+            existingEmployee.name !== name
+          ) {
+            existingEmployee.role = role;
+            existingEmployee.name = name;
+            await this.userRepo.updateUserData(
+              existingEmployee._id,
+              existingEmployee,
+            );
+          }
+          return;
         }
-        // Check if the user already exists
+
+        // Not found in this company → check if global user exists
         let user = await this.userRepo.findByEmail(email);
 
-        // If the user doesn't exist, create a new user
         if (!user) {
+          // New user: create with password
           const password = generateRandomPassword(8);
           user = await this.userRepo.createUserWithCompanyId(
             email,
@@ -92,15 +119,28 @@ export class UsersService {
           );
           await this.sendEmail(email, company.name, password);
         } else {
+          // Existing global user, just link to company
+          await this.userRepo.updateUser(user._id, companyId);
           await this.sendEmail(email, company.name);
         }
-        return true;
       }),
     );
 
-    return { created: true };
-  }
+    // Handle Delete: remove employees that are in DB but not in incoming list
+    const usersToDelete = existingUsers.filter(
+      (u) => !incomingEmails.has(u.email.toLowerCase()),
+    );
 
+    if (usersToDelete.length > 0) {
+      await Promise.all(
+        usersToDelete.map((user) =>
+          this.userRepo.deleteUserCompany(user._id, companyId),
+        ),
+      );
+    }
+
+    return { success: true };
+  }
   async sendEmail(email: string, companyName: string, password?: string) {
     try {
       const baseMessage = `You have been added to the company: ${companyName}.`;

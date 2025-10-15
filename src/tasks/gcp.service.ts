@@ -17,7 +17,7 @@ export class GcpService {
     // Ensure GOOGLE_APPLICATION_CREDENTIALS environment variable is set.
     this.storage = new Storage();
     // Replace with your actual GCP bucket name.
-    this.bucketName = 'bug-tracket-pro-attachments';
+    this.bucketName = 'bug-tracket-pro-attachment';
   }
 
   /**

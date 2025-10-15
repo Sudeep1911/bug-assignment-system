@@ -1,6 +1,7 @@
 import { Schema, Document } from 'mongoose';
 import { Types } from 'mongoose';
 export interface User extends Document {
+  _id: string;
   email: string;
   password: string;
   name?: string;
@@ -9,7 +10,7 @@ export interface User extends Document {
     companyId?: Types.ObjectId;
     designation?: string;
     modules?: {
-      module: Types.ObjectId;          // References Module collection
+      module: Types.ObjectId; // References Module collection
       proficiency: number;
     }[];
   };
@@ -35,7 +36,11 @@ export const UserSchema = new Schema({
         designation: { type: String, required: false },
         modules: [
           {
-            module: { type: Schema.Types.ObjectId, ref: 'Modules', required: true },
+            module: {
+              type: Schema.Types.ObjectId,
+              ref: 'Modules',
+              required: true,
+            },
             proficiency: { type: Number, required: true },
           },
         ],
