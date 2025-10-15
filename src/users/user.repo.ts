@@ -64,6 +64,24 @@ export class UsersRepo {
   }
 
   public async findUsersByCompanyId(companyId: string): Promise<User[]> {
-    return this.userModel.find({ 'details.companyId': new Types.ObjectId(companyId) });
+    return this.userModel
+      .find({ 'details.companyId': new Types.ObjectId(companyId) })
+      .lean();
+  }
+  public async updateUserData(userId: string, data: any) {
+    return this.userModel.findByIdAndUpdate(userId, data, {
+      new: true,
+      runValidators: true,
+    });
+  }
+  public async deleteUserCompany(userId: string, companyId: string) {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $unset: { 'details.companyId': '' } },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
   }
 }
